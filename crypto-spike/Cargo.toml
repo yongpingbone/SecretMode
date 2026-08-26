@@ -1,0 +1,17 @@
+[package]
+name = "secretmode-crypto-spike"
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+jni = "=0.21.1"
+serde_json = "=1.0.151"
+vodozemac = "=0.10.0"
+
+[dev-dependencies]
+anyhow = "=1.0.104"

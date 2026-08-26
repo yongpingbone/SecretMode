@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:secretmode:protocol:session-event:v1",
+  "title": "SecretMode Verified Session Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "eventId",
+    "sessionId",
+    "stateVersion",
+    "eventType",
+    "issuedAt",
+    "issuerServiceId",
+    "signingKeyId",
+    "signature"
+  ],
+  "properties": {
+    "version": { "const": 1 },
+    "eventId": { "type": "string", "minLength": 16, "maxLength": 256 },
+    "sessionId": { "type": "string", "minLength": 16, "maxLength": 256 },
+    "stateVersion": { "type": "integer", "minimum": 1, "maximum": 9223372036854775807 },
+    "eventType": {
+      "enum": [
+        "SESSION_ACTIVATED",
+        "REVOKE_REQUESTED",
+        "SESSION_REVOKED",
+        "SESSION_PURGED"
+      ]
+    },
+    "issuedAt": { "type": "string", "format": "date-time" },
+    "issuerServiceId": { "type": "string", "minLength": 8, "maxLength": 256 },
+    "signingKeyId": { "type": "string", "minLength": 8, "maxLength": 256 },
+    "signature": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 2048,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    }
+  }
+}

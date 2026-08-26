@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://secretmode.invalid/schemas/envelope-v1.json",
+  "title": "SecretMode encrypted envelope v1",
+  "description": "Transport envelope. Mirrored message metadata is an untrusted routing hint until it is compared with authenticated metadata recovered from the Olm plaintext.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sessionId",
+    "messageId",
+    "senderDeviceId",
+    "protocol",
+    "protocolVersion",
+    "cryptoHeader",
+    "ciphertext",
+    "sequence",
+    "createdAt"
+  ],
+  "properties": {
+    "version": { "const": 1 },
+    "sessionId": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 160,
+      "description": "Untrusted routing mirror. Must exactly match authenticated inner sessionId after decryption."
+    },
+    "messageId": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 160,
+      "description": "Untrusted routing mirror. Must exactly match authenticated inner messageId after decryption."
+    },
+    "senderDeviceId": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 160,
+      "description": "Untrusted routing mirror. Must exactly match authenticated inner senderDeviceId after decryption."
+    },
+    "protocol": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "protocolVersion": { "type": "integer", "minimum": 1 },
+    "cryptoHeader": {
+      "description": "Opaque, base64-encoded protocol header. Backend must not parse ratchet internals.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "ciphertext": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1048576,
+      "description": "End-to-end encrypted payload. Plaintext and authenticated inner metadata never appear here in decoded form."
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9223372036854775807,
+      "description": "Untrusted routing mirror. Never advance replay state from this value; compare it to the authenticated inner sequence first."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Untrusted routing mirror. Must exactly match authenticated inner createdAt if displayed or used for ordering."
+    }
+  }
+}

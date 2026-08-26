@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:secretmode:protocol:revoke-event:v1",
+  "title": "SecretMode Revoke Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "eventId",
+    "sessionId",
+    "stateVersion",
+    "revokedAt",
+    "issuerServiceId",
+    "reason",
+    "signingKeyId",
+    "signature"
+  ],
+  "properties": {
+    "version": { "const": 1 },
+    "eventId": { "type": "string", "minLength": 16, "maxLength": 256 },
+    "sessionId": { "type": "string", "minLength": 16, "maxLength": 256 },
+    "stateVersion": { "type": "integer", "minimum": 1, "maximum": 9223372036854775807 },
+    "revokedAt": { "type": "string", "format": "date-time" },
+    "issuerServiceId": { "type": "string", "minLength": 8, "maxLength": 256 },
+    "reason": {
+      "enum": [
+        "USER_REQUESTED",
+        "DEVICE_REMOVED",
+        "SECURITY_RESET",
+        "SESSION_EXPIRED"
+      ]
+    },
+    "signingKeyId": { "type": "string", "minLength": 8, "maxLength": 256 },
+    "signature": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 2048,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    }
+  }
+}

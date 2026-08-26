@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://secretmode.invalid/protocol/pairing-invite.schema.json",
+  "title": "SecretMode Pairing Invite v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "version", "pairingIdB64u", "createdAtMs", "expiresAtMs", "inviterDeviceId", "inviterIdentitySpkiB64u", "inviterNonceB64u"],
+  "properties": {
+    "type": { "const": "pairing_invite" },
+    "version": { "const": 1 },
+    "pairingIdB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{22}$" },
+    "createdAtMs": { "type": "integer", "minimum": 0 },
+    "expiresAtMs": { "type": "integer", "minimum": 1 },
+    "inviterDeviceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "inviterIdentitySpkiB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,1366}$" },
+    "inviterNonceB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" }
+  }
+}

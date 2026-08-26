@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://secretmode.invalid/schemas/authenticated-message-v1.json",
+  "title": "SecretMode authenticated Olm message v1",
+  "description": "UTF-8 JSON serialized entirely inside the Olm plaintext before encryption. The backend must never receive this object in plaintext.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sessionId",
+    "messageId",
+    "senderDeviceId",
+    "sequence",
+    "contentType",
+    "body",
+    "createdAt"
+  ],
+  "properties": {
+    "version": { "const": 1 },
+    "sessionId": { "type": "string", "minLength": 16, "maxLength": 160 },
+    "messageId": { "type": "string", "minLength": 16, "maxLength": 160 },
+    "senderDeviceId": { "type": "string", "minLength": 16, "maxLength": 160 },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9223372036854775807,
+      "description": "Authenticated replay sequence for one (sessionId, senderDeviceId) stream."
+    },
+    "contentType": { "const": "text/plain; charset=utf-8" },
+    "body": { "type": "string", "maxLength": 8192 },
+    "createdAt": { "type": "string", "format": "date-time" }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://secretmode.invalid/protocol/pairing-accept.schema.json",
+  "title": "SecretMode Pairing Accept v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "version", "pairingIdB64u", "transcriptDigestB64u", "inviteeDeviceId", "inviteeIdentitySpkiB64u", "inviteeNonceB64u", "inviteeSignatureDerB64u"],
+  "properties": {
+    "type": { "const": "pairing_accept" },
+    "version": { "const": 1 },
+    "pairingIdB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{22}$" },
+    "transcriptDigestB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
+    "inviteeDeviceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "inviteeIdentitySpkiB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,1366}$" },
+    "inviteeNonceB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
+    "inviteeSignatureDerB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{64,160}$" }
+  }
+}
