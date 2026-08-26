@@ -117,7 +117,9 @@ object BubbleController {
         context.getSystemService(NotificationManager::class.java)
             .notify(NOTIFICATION_ID, notification)
 
-        return capability(context).usable
+        // Posting can succeed even when the user has chosen not to float bubbles.
+        // In that case Android intentionally presents a normal notification instead.
+        return true
     }
 
     private fun publishConversationShortcut(context: Context, person: Person) {
