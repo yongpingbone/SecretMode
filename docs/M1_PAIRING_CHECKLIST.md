@@ -1,16 +1,16 @@
 # M1 Authenticated Pairing Checklist
 
 ## Device identity
-- [ ] AndroidKeyStore P-256 signing key probe passes on emulator
-- [ ] identity public key is stable across reopen
-- [ ] tampered payload fails identity signature verification
+- [x] AndroidKeyStore P-256 signing key probe passes on emulator
+- [x] identity public key is stable across reopen
+- [x] tampered payload fails identity signature verification
 - [ ] real-device security level recorded without overclaiming StrongBox
 
 ## Transcript
-- [ ] canonical transcript encoding locked
-- [ ] inviter and invitee signatures bind the same transcript
-- [ ] peer/key substitution fails verification
-- [ ] role-reflection signature reuse fails verification
+- [x] canonical transcript encoding locked
+- [x] inviter and invitee signatures bind the same transcript
+- [x] peer/key substitution fails verification
+- [x] role-reflection signature reuse fails verification
 - [ ] invite expiry and one-time consumption model tested
 
 ## Human verification
