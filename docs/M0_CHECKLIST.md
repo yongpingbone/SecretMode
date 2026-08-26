@@ -16,13 +16,15 @@
 - [x] Autofill/content capture disabled on private input
 - [x] API 35+ content sensitivity marker
 - [x] Draft/rendered private UI cleared on stop/destroy
+- [x] Cloud backup / Android 12+ device transfer explicitly excluded
 - [ ] Real-device Bubble test on at least two OEMs
 
 ## Crypto spike
 - [x] vodozemac pinned to 0.10.0
 - [x] host A/B Olm roundtrip test exists
 - [x] JNI boundary exists
-- [ ] Android arm64-v8a native build
+- [x] Android arm64-v8a native build
+- [ ] ARM64 JNI library packaged and verified inside APK
 - [ ] JNI probe invoked from Android test-only path
 - [ ] 1,000 bidirectional message test
 - [ ] dropped/out-of-order test
