@@ -1,6 +1,6 @@
 # ADR-005: Monotonic revocation and expiring leases
 
-Status: M0 candidate
+Status: Accepted for M0 protocol boundary
 
 ## Decision
 
@@ -14,7 +14,7 @@ A client persists the highest verified `stateVersion` and accepted event IDs. A 
 
 Revocation begins at `REVOKING`. Once that state is reached, no new display/session lease may be issued or accepted. Existing leases are bounded by expiry and are rejected immediately by a client that already knows the session is no longer ACTIVE.
 
-A signed lease binds at minimum `leaseId`, `sessionId`, `holderDeviceId`, `stateVersion`, `issuedAt`, `expiresAt`, and a nonce. Clients reject expired leases, wrong session/device bindings, stale state versions, and future state versions they have not verified.
+A signed lease binds at minimum `leaseId`, `sessionId`, `holderDeviceId`, `stateVersion`, `issuedAt`, `expiresAt`, and a nonce. Clients accept a verified lease only when `issuedAt <= now < expiresAt` and `expiresAt > issuedAt`. Clients also reject wrong session/device bindings, stale state versions, and future state versions they have not verified.
 
 ## Signature boundary
 

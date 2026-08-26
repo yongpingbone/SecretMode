@@ -48,9 +48,9 @@
 - [x] encrypted envelope schema exists
 - [x] ratchet header opaque to backend
 - [x] authenticated inner message metadata schema exists
-- [ ] anti-replay/session event schema
-- [ ] revoke event schema
-- [ ] signed lease schema
+- [x] anti-replay/session event schema
+- [x] revoke event schema
+- [x] signed lease schema
 
 ## Gate
 M0 must not be merged as a production-ready E2EE implementation. Passing this checklist only authorizes work on M1 pairing.
