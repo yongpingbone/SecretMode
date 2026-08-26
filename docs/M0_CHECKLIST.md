@@ -30,7 +30,7 @@
 - [x] dropped/out-of-order test
 - [x] replay test with authenticated inner sequence and 128-slot window
 - [x] pickle/restore across simulated process death via serialized bytes
-- [ ] Android Keystore cryptographic-erasure emulator probe
+- [x] Android Keystore cryptographic-erasure emulator probe
 - [ ] destroyed state cannot decrypt old session
 - [ ] authenticated pairing design accepted
 - [ ] final third-party notices / legal review

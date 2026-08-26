@@ -12,13 +12,29 @@ object CryptoBridge {
     private var loaded = false
 
     @Synchronized
-    fun loadForM0Probe(): String {
+    private fun ensureLoaded() {
         if (!loaded) {
             System.loadLibrary(LIBRARY_NAME)
             loaded = true
         }
+    }
+
+    fun loadForM0Probe(): String {
+        ensureLoaded()
         return nativeProbe()
     }
 
+    fun createM0OlmPickleBundle(): ByteArray {
+        ensureLoaded()
+        return nativeCreateOlmPickleBundle()
+    }
+
+    fun validateM0OlmPickleBundle(bundle: ByteArray): String {
+        ensureLoaded()
+        return nativeValidateOlmPickleBundle(bundle)
+    }
+
     private external fun nativeProbe(): String
+    private external fun nativeCreateOlmPickleBundle(): ByteArray
+    private external fun nativeValidateOlmPickleBundle(bundle: ByteArray): String
 }

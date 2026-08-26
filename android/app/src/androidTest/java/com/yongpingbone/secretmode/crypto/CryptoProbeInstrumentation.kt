@@ -6,14 +6,6 @@ import android.os.Bundle
 import com.yongpingbone.secretmode.storage.SessionStateCipher
 import java.security.GeneralSecurityException
 
-/**
- * M0-only instrumentation entrypoint.
- *
- * This does not test product messaging. It proves that an Android process can
- * load the packaged Rust library, resolve the JNI symbol, enter Rust code, and
- * exercise Android Keystore cryptographic-erasure behavior before real session
- * persistence is allowed.
- */
 class CryptoProbeInstrumentation : Instrumentation() {
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
@@ -24,15 +16,16 @@ class CryptoProbeInstrumentation : Instrumentation() {
         val result = Bundle()
         try {
             val probe = CryptoBridge.loadForM0Probe()
-            check(probe == "vodozemac-0.10.0") {
-                "Unexpected crypto probe result: $probe"
-            }
+            check(probe == "vodozemac-0.10.0") { "Unexpected crypto probe result: $probe" }
 
             verifyKeystoreCryptographicErasure()
+            val restoredSessionId = verifyRealOlmSessionCryptographicErasure()
 
             result.putString("secretmode_result", "ok")
             result.putString("probe", probe)
             result.putString("keystore_destroy_result", "ok")
+            result.putString("olm_pickle_destroy_result", "ok")
+            result.putString("restored_olm_session_id", restoredSessionId)
             finish(Activity.RESULT_OK, result)
         } catch (t: Throwable) {
             result.putString("secretmode_result", "failure")
@@ -47,7 +40,6 @@ class CryptoProbeInstrumentation : Instrumentation() {
         val oldPlaintext = "serialized-olm-pickle-that-must-become-unrecoverable".toByteArray()
         val replacementPlaintext = "replacement-session-state".toByteArray()
 
-        // Make the probe deterministic across emulator snapshots/retries.
         check(SessionStateCipher.destroy(sessionId))
         check(!SessionStateCipher.hasKey(sessionId))
 
@@ -55,7 +47,6 @@ class CryptoProbeInstrumentation : Instrumentation() {
         check(SessionStateCipher.hasKey(sessionId))
         check(SessionStateCipher.decrypt(sessionId, oldState).contentEquals(oldPlaintext))
 
-        // Destruction removes the only app-usable key for the old encrypted state.
         check(SessionStateCipher.destroy(sessionId))
         check(!SessionStateCipher.hasKey(sessionId))
 
@@ -67,8 +58,6 @@ class CryptoProbeInstrumentation : Instrumentation() {
         }
         check(missingKeyRejected) { "Old state decrypted after its Keystore key was deleted" }
 
-        // Even if a fresh key is later created under the same alias, AES-GCM must reject
-        // ciphertext authenticated by the destroyed key.
         val replacementState = SessionStateCipher.encrypt(sessionId, replacementPlaintext)
         check(SessionStateCipher.decrypt(sessionId, replacementState).contentEquals(replacementPlaintext))
 
@@ -78,11 +67,76 @@ class CryptoProbeInstrumentation : Instrumentation() {
         } catch (_: GeneralSecurityException) {
             oldCiphertextRejectedByReplacementKey = true
         }
-        check(oldCiphertextRejectedByReplacementKey) {
-            "Old state unexpectedly decrypted with a replacement Keystore key"
-        }
+        check(oldCiphertextRejectedByReplacementKey) { "Old state unexpectedly decrypted with a replacement Keystore key" }
 
+        oldPlaintext.fill(0)
+        replacementPlaintext.fill(0)
         check(SessionStateCipher.destroy(sessionId))
         check(!SessionStateCipher.hasKey(sessionId))
+    }
+
+    private fun verifyRealOlmSessionCryptographicErasure(): String {
+        val storageSessionId = "m0-real-olm-pickle-destruction-probe"
+        var plaintextForCleanup: ByteArray? = null
+        var recoveredForCleanup: ByteArray? = null
+        var replacementForCleanup: ByteArray? = null
+
+        check(SessionStateCipher.destroy(storageSessionId))
+        check(!SessionStateCipher.hasKey(storageSessionId))
+
+        try {
+            val createdBundle = CryptoBridge.createM0OlmPickleBundle()
+            plaintextForCleanup = createdBundle
+            check(createdBundle.isNotEmpty()) { "Rust returned an empty Olm SessionPickle bundle" }
+
+            val originalSessionId = CryptoBridge.validateM0OlmPickleBundle(createdBundle)
+            check(originalSessionId.isNotBlank()) { "Restored Olm session ID must not be blank" }
+
+            val encryptedState = SessionStateCipher.encrypt(storageSessionId, createdBundle)
+            check(SessionStateCipher.hasKey(storageSessionId))
+
+            val recoveredBundle = SessionStateCipher.decrypt(storageSessionId, encryptedState)
+            recoveredForCleanup = recoveredBundle
+            val recoveredSessionId = CryptoBridge.validateM0OlmPickleBundle(recoveredBundle)
+            check(recoveredSessionId == originalSessionId) { "Keystore roundtrip changed the restored Olm session identity" }
+
+            createdBundle.fill(0)
+            plaintextForCleanup = null
+            recoveredBundle.fill(0)
+            recoveredForCleanup = null
+
+            check(SessionStateCipher.destroy(storageSessionId))
+            check(!SessionStateCipher.hasKey(storageSessionId))
+
+            var missingKeyRejected = false
+            try {
+                SessionStateCipher.decrypt(storageSessionId, encryptedState)
+            } catch (_: SessionStateCipher.MissingSessionKeyException) {
+                missingKeyRejected = true
+            }
+            check(missingKeyRejected) { "Destroyed Keystore key still decrypted a real Olm SessionPickle bundle" }
+
+            val replacementPlaintext = "replacement-state-must-not-open-old-olm-pickle".toByteArray()
+            replacementForCleanup = replacementPlaintext
+            val replacementState = SessionStateCipher.encrypt(storageSessionId, replacementPlaintext)
+            check(SessionStateCipher.decrypt(storageSessionId, replacementState).contentEquals(replacementPlaintext))
+
+            var oldCiphertextRejectedByReplacementKey = false
+            try {
+                SessionStateCipher.decrypt(storageSessionId, encryptedState)
+            } catch (_: GeneralSecurityException) {
+                oldCiphertextRejectedByReplacementKey = true
+            }
+            check(oldCiphertextRejectedByReplacementKey) { "Replacement key unexpectedly authenticated ciphertext containing the old Olm SessionPickle" }
+
+            replacementPlaintext.fill(0)
+            replacementForCleanup = null
+            return originalSessionId
+        } finally {
+            plaintextForCleanup?.fill(0)
+            recoveredForCleanup?.fill(0)
+            replacementForCleanup?.fill(0)
+            SessionStateCipher.destroy(storageSessionId)
+        }
     }
 }
