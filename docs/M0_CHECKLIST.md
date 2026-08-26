@@ -32,14 +32,16 @@
 - [x] pickle/restore across simulated process death via serialized bytes
 - [ ] destroyed state cannot decrypt old session
 - [ ] authenticated pairing design accepted
-- [ ] third-party license review
+- [ ] final third-party notices / legal review
 
 ## Supply chain
 - [x] Rust CI toolchain pinned to 1.98.0
 - [x] direct Rust dependency versions exact-pinned
 - [x] GitHub Actions in M0 workflow pinned to reviewed commit SHAs
-- [ ] Cargo.lock committed and all Cargo builds use --locked
-- [ ] resolved Rust dependency license inventory reviewed
+- [x] Cargo.lock committed
+- [x] all M0 Cargo build/test commands use --locked
+- [x] resolved Rust dependency license metadata technically screened
+- [ ] release third-party notice bundle reviewed
 
 ## Protocol
 - [x] encrypted envelope schema exists
