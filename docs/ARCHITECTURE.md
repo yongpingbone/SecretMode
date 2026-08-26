@@ -38,11 +38,13 @@ Transport / backend (future)
 ## Android baseline
 
 - minSdk 30
-- targetSdk 37
+- compileSdk / targetSdk 36 for the reproducible M0 toolchain
 - AGP 9.3.0
 - JDK 17
 - Notification Bubble first, Activity fallback
 - BubbleActivity is `allowEmbedded=true` and `resizeableActivity=true`
+
+API 37 is not required by any M0 feature. The project should only raise compile/target SDK when the SDK platform is available in the reproducible CI toolchain and a product or policy requirement justifies the change.
 
 ## Crypto decision gate
 
