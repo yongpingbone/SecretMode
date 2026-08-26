@@ -16,8 +16,8 @@
 ## Human verification
 - [ ] final QR verification UX accepted
 - [ ] remote safety-code design reviewed before enablement
-- [ ] relationship cannot become VERIFIED without explicit verification
-- [ ] device key change forces re-verification
+- [x] relationship cannot become VERIFIED without explicit verification
+- [x] device key change forces re-verification
 
 ## Service boundary
 - [ ] participant-authorized revoke request signature flow defined
