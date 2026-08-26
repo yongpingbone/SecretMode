@@ -1,11 +1,11 @@
-use jni::objects::JClass;
+use jni::objects::JObject;
 use jni::sys::jstring;
 use jni::JNIEnv;
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_yongpingbone_secretmode_crypto_CryptoBridge_nativeProbe<'local>(
     mut env: JNIEnv<'local>,
-    _class: JClass<'local>,
+    _this: JObject<'local>,
 ) -> jstring {
     match env.new_string(format!("vodozemac-{}", vodozemac::VERSION)) {
         Ok(value) => value.into_raw(),
