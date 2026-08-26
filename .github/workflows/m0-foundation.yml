@@ -158,7 +158,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Run crypto, erasure, and device identity probes inside Android emulator
+      - name: Run crypto, erasure, identity, and service signer probes inside Android emulator
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 35
@@ -179,3 +179,5 @@ jobs:
             grep -F "device_identity_result=ok" /tmp/secretmode-android-probes.txt
             grep -F "pairing_transcript_result=ok" /tmp/secretmode-android-probes.txt
             grep -F "participant_revoke_request_result=ok" /tmp/secretmode-android-probes.txt
+            adb shell am instrument -w com.yongpingbone.secretmode.test/com.yongpingbone.secretmode.crypto.ServiceSignerTrustInstrumentation | tee /tmp/secretmode-service-signer-probe.txt
+            grep -F "service_signer_trust_result=ok" /tmp/secretmode-service-signer-probe.txt

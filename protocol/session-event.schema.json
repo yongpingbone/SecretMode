@@ -11,7 +11,7 @@
     "stateVersion",
     "eventType",
     "issuedAt",
-    "issuerDeviceId",
+    "issuerServiceId",
     "signingKeyId",
     "signature"
   ],
@@ -29,7 +29,7 @@
       ]
     },
     "issuedAt": { "type": "string", "format": "date-time" },
-    "issuerDeviceId": { "type": "string", "minLength": 16, "maxLength": 256 },
+    "issuerServiceId": { "type": "string", "minLength": 8, "maxLength": 256 },
     "signingKeyId": { "type": "string", "minLength": 8, "maxLength": 256 },
     "signature": {
       "type": "string",
