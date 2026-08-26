@@ -47,6 +47,7 @@ pub enum LifecycleError {
     SessionNotActive,
     InvalidLeaseLifetime,
     LeaseBindingMismatch,
+    LeaseNotYetValid,
     LeaseExpired,
     StaleLeaseStateVersion,
     FutureLeaseStateVersion,
@@ -161,6 +162,12 @@ impl SessionLifecycleState {
         }
         if lease.state_version > self.highest_state_version {
             return Err(LifecycleError::FutureLeaseStateVersion);
+        }
+        if lease.expires_at_ms <= lease.issued_at_ms {
+            return Err(LifecycleError::InvalidLeaseLifetime);
+        }
+        if now_ms < lease.issued_at_ms {
+            return Err(LifecycleError::LeaseNotYetValid);
         }
         if now_ms >= lease.expires_at_ms {
             return Err(LifecycleError::LeaseExpired);
@@ -368,30 +375,18 @@ mod tests {
     fn active_lease_is_valid_before_expiry() {
         let state = active_state();
         let lease = state
-            .lease_claims_for_signing(
-                "lease-00000000000001",
-                DEVICE_ID,
-                1_000,
-                2_000,
-            )
+            .lease_claims_for_signing("lease-00000000000001", DEVICE_ID, 1_000, 2_000)
             .unwrap();
         assert_eq!(lease.session_id, SESSION_ID);
         assert_eq!(lease.state_version, 1);
-        state
-            .validate_verified_lease(&lease, DEVICE_ID, 1_999)
-            .unwrap();
+        state.validate_verified_lease(&lease, DEVICE_ID, 1_999).unwrap();
     }
 
     #[test]
     fn lease_with_wrong_session_or_device_is_rejected() {
         let state = active_state();
         let mut lease = state
-            .lease_claims_for_signing(
-                "lease-00000000000001",
-                DEVICE_ID,
-                1_000,
-                2_000,
-            )
+            .lease_claims_for_signing("lease-00000000000001", DEVICE_ID, 1_000, 2_000)
             .unwrap();
         lease.session_id = "session-OTHER-00000001".to_owned();
         assert_eq!(
@@ -410,12 +405,7 @@ mod tests {
     fn lease_is_rejected_after_revocation_begins() {
         let mut state = active_state();
         let lease = state
-            .lease_claims_for_signing(
-                "lease-00000000000001",
-                DEVICE_ID,
-                1_000,
-                2_000,
-            )
+            .lease_claims_for_signing("lease-00000000000001", DEVICE_ID, 1_000, 2_000)
             .unwrap();
         state
             .apply_verified_event(&event(
@@ -441,19 +431,26 @@ mod tests {
     }
 
     #[test]
-    fn expired_lease_is_rejected() {
+    fn lease_time_bounds_are_enforced() {
         let state = active_state();
         let lease = state
-            .lease_claims_for_signing(
-                "lease-00000000000001",
-                DEVICE_ID,
-                1_000,
-                2_000,
-            )
+            .lease_claims_for_signing("lease-00000000000001", DEVICE_ID, 1_000, 2_000)
             .unwrap();
+
+        assert_eq!(
+            state.validate_verified_lease(&lease, DEVICE_ID, 999),
+            Err(LifecycleError::LeaseNotYetValid)
+        );
         assert_eq!(
             state.validate_verified_lease(&lease, DEVICE_ID, 2_000),
             Err(LifecycleError::LeaseExpired)
+        );
+
+        let mut malformed = lease.clone();
+        malformed.expires_at_ms = malformed.issued_at_ms;
+        assert_eq!(
+            state.validate_verified_lease(&malformed, DEVICE_ID, 1_000),
+            Err(LifecycleError::InvalidLeaseLifetime)
         );
     }
 
@@ -461,12 +458,7 @@ mod tests {
     fn stale_and_future_lease_versions_are_rejected() {
         let state = active_state();
         let mut lease = state
-            .lease_claims_for_signing(
-                "lease-00000000000001",
-                DEVICE_ID,
-                1_000,
-                2_000,
-            )
+            .lease_claims_for_signing("lease-00000000000001", DEVICE_ID, 1_000, 2_000)
             .unwrap();
 
         lease.state_version = 0;
