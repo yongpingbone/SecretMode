@@ -158,7 +158,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Run crypto, erasure, identity, signer, and human-verification probes inside Android emulator
+      - name: Run crypto, erasure, identity, signer, human-verification, and final-QR UX probes inside Android emulator
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 35
@@ -184,3 +184,7 @@ jobs:
             adb shell am start -W -n com.yongpingbone.secretmode/com.yongpingbone.secretmode.debug.HumanVerificationProbeActivity
             adb logcat -d -s SecretModeHumanVerification:I '*:S' | tee /tmp/secretmode-human-verification-probe.txt
             grep -F "human_verification_result=ok" /tmp/secretmode-human-verification-probe.txt
+            adb logcat -c
+            adb shell am start -W -n com.yongpingbone.secretmode/com.yongpingbone.secretmode.debug.FinalVerificationUxProbeActivity
+            adb logcat -d -s SecretModeFinalVerificationUx:I '*:S' | tee /tmp/secretmode-final-verification-ux-probe.txt
+            grep -F "final_verification_ux_result=ok" /tmp/secretmode-final-verification-ux-probe.txt
