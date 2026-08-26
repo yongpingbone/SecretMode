@@ -24,7 +24,7 @@
 - [x] host A/B Olm roundtrip test exists
 - [x] JNI boundary exists
 - [x] Android arm64-v8a native build
-- [ ] ARM64 JNI library packaged and verified inside APK
+- [x] ARM64 JNI library packaged and verified inside APK
 - [ ] JNI probe invoked from Android test-only path
 - [ ] 1,000 bidirectional message test
 - [ ] dropped/out-of-order test
