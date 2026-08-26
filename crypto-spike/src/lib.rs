@@ -1,4 +1,5 @@
 pub mod lifecycle;
+pub mod pairing;
 pub mod replay;
 
 use jni::objects::{JByteArray, JObject};
