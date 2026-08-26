@@ -9,6 +9,12 @@ pub enum PairingState {
     KeyChanged,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PairingRole {
+    Inviter,
+    Invitee,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PairingError {
     PairingIdMismatch,
@@ -26,6 +32,8 @@ pub struct PairingStateMachine {
     transcript_digest: [u8; 32],
     expires_at_ms: u64,
     state: PairingState,
+    inviter_human_verified: bool,
+    invitee_human_verified: bool,
 }
 
 impl PairingStateMachine {
@@ -35,11 +43,17 @@ impl PairingStateMachine {
             transcript_digest,
             expires_at_ms,
             state: PairingState::Issued,
+            inviter_human_verified: false,
+            invitee_human_verified: false,
         }
     }
 
     pub fn state(&self) -> PairingState {
         self.state
+    }
+
+    pub fn human_verification_complete(&self) -> bool {
+        self.inviter_human_verified && self.invitee_human_verified
     }
 
     pub fn accept(
@@ -64,15 +78,33 @@ impl PairingStateMachine {
         self.transition(PairingState::Accepted, PairingState::Confirmed, "confirm")
     }
 
-    pub fn verify_human(
+    pub fn record_human_verification(
         &mut self,
+        role: PairingRole,
         pairing_id: &[u8; 16],
         transcript_digest: &[u8; 32],
         now_ms: u64,
-    ) -> Result<(), PairingError> {
+    ) -> Result<bool, PairingError> {
         self.require_binding(pairing_id, transcript_digest)?;
         self.require_unexpired(now_ms)?;
-        self.transition(PairingState::Confirmed, PairingState::Verified, "verify_human")
+        if self.state != PairingState::Confirmed && self.state != PairingState::Verified {
+            return Err(PairingError::InvalidTransition {
+                from: self.state,
+                action: "record_human_verification",
+            });
+        }
+
+        match role {
+            PairingRole::Inviter => self.inviter_human_verified = true,
+            PairingRole::Invitee => self.invitee_human_verified = true,
+        }
+
+        if self.human_verification_complete() {
+            self.state = PairingState::Verified;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 
     pub fn expire(&mut self, now_ms: u64) -> Result<(), PairingError> {

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://secretmode.invalid/protocol/pairing-verification-ack.schema.json",
+  "title": "SecretMode Pairing Human Verification Acknowledgment v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "version", "pairingIdB64u", "transcriptDigestB64u", "verifierRole", "verifierDeviceId", "method", "verifiedAtMs", "signatureDerB64u"],
+  "properties": {
+    "type": { "const": "pairing_verification_ack" },
+    "version": { "const": 1 },
+    "pairingIdB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{22}$" },
+    "transcriptDigestB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
+    "verifierRole": { "enum": ["inviter", "invitee"] },
+    "verifierDeviceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "method": { "enum": ["in_person_qr_scan", "in_person_peer_confirm"] },
+    "verifiedAtMs": { "type": "integer", "minimum": 0 },
+    "signatureDerB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{64,160}$" }
+  }
+}
