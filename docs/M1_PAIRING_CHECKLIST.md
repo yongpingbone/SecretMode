@@ -15,7 +15,7 @@
 
 ## Human verification
 - [ ] final QR verification UX accepted
-- [ ] remote safety-code design reviewed before enablement
+- [x] remote safety-code design reviewed before enablement
 - [x] relationship cannot become VERIFIED without explicit verification
 - [x] device key change forces re-verification
 
