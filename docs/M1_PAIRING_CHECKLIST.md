@@ -21,8 +21,8 @@
 
 ## Service boundary
 - [x] participant-authorized revoke request signature flow defined
-- [ ] authoritative state/lease signer trust and rotation design accepted
-- [ ] relay is not an implicit signing authority
+- [x] authoritative state/lease signer trust and rotation design accepted
+- [x] relay is not an implicit signing authority
 
 ## Gate
 Do not mark `authenticated pairing design accepted` in M0 until the full pairing handshake, human verification, replay/expiry behavior, and key-change behavior have evidence.
