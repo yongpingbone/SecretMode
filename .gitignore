@@ -1,0 +1,23 @@
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+.idea/
+*.iml
+
+# Rust
+crypto-spike/target/
+
+# Native build outputs
+*.so
+*.a
+
+# Local secrets / signing
+*.jks
+*.keystore
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
