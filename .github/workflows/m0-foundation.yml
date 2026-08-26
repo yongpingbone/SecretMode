@@ -179,5 +179,4 @@ jobs:
             grep -F "device_identity_result=ok" /tmp/secretmode-android-probes.txt
             grep -F "pairing_transcript_result=ok" /tmp/secretmode-android-probes.txt
             grep -F "participant_revoke_request_result=ok" /tmp/secretmode-android-probes.txt
-            adb shell am instrument -w com.yongpingbone.secretmode.test/com.yongpingbone.secretmode.crypto.ServiceSignerTrustInstrumentation | tee /tmp/secretmode-service-signer-probe.txt
-            grep -F "service_signer_trust_result=ok" /tmp/secretmode-service-signer-probe.txt
+            grep -F "service_signer_trust_result=ok" /tmp/secretmode-android-probes.txt

@@ -24,6 +24,7 @@ class CryptoProbeInstrumentation : Instrumentation() {
             val restoredSessionId = verifyRealOlmSessionCryptographicErasure()
             verifyDeviceIdentitySigningAndPairingTranscript()
             verifyParticipantRevokeRequestAuthorization()
+            ServiceSignerTrustInstrumentation().verifyServiceSignerTrustAndRotation()
 
             result.putString("secretmode_result", "ok")
             result.putString("probe", probe)
@@ -33,6 +34,7 @@ class CryptoProbeInstrumentation : Instrumentation() {
             result.putString("device_identity_result", "ok")
             result.putString("pairing_transcript_result", "ok")
             result.putString("participant_revoke_request_result", "ok")
+            result.putString("service_signer_trust_result", "ok")
             finish(Activity.RESULT_OK, result)
         } catch (t: Throwable) {
             result.putString("secretmode_result", "failure")

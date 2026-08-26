@@ -29,7 +29,7 @@ class ServiceSignerTrustInstrumentation : Instrumentation() {
         }
     }
 
-    private fun verifyServiceSignerTrustAndRotation() {
+    internal fun verifyServiceSignerTrustAndRotation() {
         val now = 1_700_000_100_000L
         val root1 = generateP256KeyPair()
         val root2 = generateP256KeyPair()
