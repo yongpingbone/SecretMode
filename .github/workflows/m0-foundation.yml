@@ -2,12 +2,16 @@ name: M0 Foundation
 
 on:
   push:
-    branches: [main, m0-foundation]
+    branches: [main]
   pull_request:
     branches: [main]
 
 permissions:
   contents: read
+
+concurrency:
+  group: m0-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   android:
@@ -26,6 +30,12 @@ jobs:
           gradle-version: '9.5.0'
       - name: Build Android debug APK
         run: gradle :android:app:assembleDebug --stacktrace
+      - name: Upload M0 debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: secretmode-m0-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
 
   crypto-host:
     runs-on: ubuntu-latest
@@ -34,3 +44,28 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Cargo test
         run: cargo test --manifest-path crypto-spike/Cargo.toml
+
+  crypto-android-arm64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - uses: android-actions/setup-android@v3
+      - name: Install pinned Android NDK
+        run: sdkmanager "ndk;28.2.13676358"
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --version 4.1.2 --locked
+      - name: Build vodozemac JNI library for arm64-v8a
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
+        run: cargo ndk -t arm64-v8a -p 30 -o crypto-spike/android-jni build --release --manifest-path crypto-spike/Cargo.toml
+      - name: Verify native library exists
+        run: test -s crypto-spike/android-jni/arm64-v8a/libsecretmode_crypto_spike.so
+      - name: Upload Android ARM64 crypto library
+        uses: actions/upload-artifact@v4
+        with:
+          name: secretmode-crypto-arm64
+          path: crypto-spike/android-jni/arm64-v8a/libsecretmode_crypto_spike.so
+          if-no-files-found: error
