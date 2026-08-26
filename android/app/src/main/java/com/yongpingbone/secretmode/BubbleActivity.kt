@@ -20,13 +20,14 @@ class BubbleActivity : Activity() {
     private lateinit var privateContent: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Deliberately do not restore Android hierarchy/SavedState for private surfaces.
         super.onCreate(null)
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(buildSecureUi())
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
+        // Deliberately skip super: private plaintext must never enter the hierarchy state Bundle.
         outState.clear()
     }
 
