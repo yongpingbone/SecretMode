@@ -51,6 +51,23 @@ jobs:
       - name: Cargo test against committed lockfile
         run: cargo test --manifest-path crypto-spike/Cargo.toml --locked
 
+  pairing-storage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify runner PostgreSQL tooling
+        run: |
+          command -v psql
+          command -v createdb
+          command -v pg_isready
+          psql --version
+      - name: Test atomic one-time pairing invite consumption
+        run: bash backend-spike/test_pairing_invites.sh | tee /tmp/secretmode-pairing-storage.txt
+      - name: Require pairing storage evidence marker
+        run: grep -F "pairing_invite_storage_result=ok" /tmp/secretmode-pairing-storage.txt
+
   crypto-android-arm64:
     runs-on: ubuntu-latest
     steps:
