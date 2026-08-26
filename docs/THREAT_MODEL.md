@@ -44,6 +44,14 @@ Private surfaces use `FLAG_SECURE`. API 35+ sensitive roots should also use `CON
 
 Bubbles are user/OEM controlled. The app must function when bubbles are disabled. SecretMode must not add `SYSTEM_ALERT_WINDOW` as a fallback.
 
+## Replay and transport tampering
+
+The backend may duplicate, delay, reorder, drop, or alter transport envelopes. Cleartext outer metadata is therefore never authoritative. `sessionId`, `messageId`, `senderDeviceId`, `sequence`, and `createdAt` are repeated inside the Olm-encrypted plaintext and must match their outer mirrors after decryption.
+
+Replay decisions use only the authenticated inner sequence. A per-`(sessionId, senderDeviceId)` sliding window permits unseen out-of-order messages while rejecting duplicates and messages that have fallen out of the window. Session state is checked before acceptance, so a replay-valid envelope can never reactivate a destroyed or revoked session.
+
+Replay-window persistence is required before production use; a process restart must not reset replay history while the cryptographic session remains usable.
+
 ## Offline revoke
 
 Remote code cannot delete data from a completely offline peer device. The intended model is:

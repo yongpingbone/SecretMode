@@ -25,11 +25,11 @@
 - [x] JNI boundary exists
 - [x] Android arm64-v8a native build
 - [x] ARM64 JNI library packaged and verified inside APK
-- [ ] JNI probe invoked from Android test-only path
-- [ ] 1,000 bidirectional message test
-- [ ] dropped/out-of-order test
+- [x] JNI probe invoked from Android test-only path
+- [x] 1,000 bidirectional message test
+- [x] dropped/out-of-order test
 - [ ] replay test
-- [ ] pickle/restore across process death
+- [x] pickle/restore across simulated process death via serialized bytes
 - [ ] destroyed state cannot decrypt old session
 - [ ] authenticated pairing design accepted
 - [ ] third-party license review
@@ -37,6 +37,7 @@
 ## Protocol
 - [x] encrypted envelope schema exists
 - [x] ratchet header opaque to backend
+- [x] authenticated inner message metadata schema exists
 - [ ] anti-replay/session event schema
 - [ ] revoke event schema
 - [ ] signed lease schema

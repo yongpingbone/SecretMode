@@ -1,3 +1,5 @@
+pub mod replay;
+
 use jni::objects::JObject;
 use jni::sys::jstring;
 use jni::JNIEnv;
