@@ -28,11 +28,18 @@
 - [x] JNI probe invoked from Android test-only path
 - [x] 1,000 bidirectional message test
 - [x] dropped/out-of-order test
-- [ ] replay test
+- [x] replay test with authenticated inner sequence and 128-slot window
 - [x] pickle/restore across simulated process death via serialized bytes
 - [ ] destroyed state cannot decrypt old session
 - [ ] authenticated pairing design accepted
 - [ ] third-party license review
+
+## Supply chain
+- [x] Rust CI toolchain pinned to 1.98.0
+- [x] direct Rust dependency versions exact-pinned
+- [x] GitHub Actions in M0 workflow pinned to reviewed commit SHAs
+- [ ] Cargo.lock committed and all Cargo builds use --locked
+- [ ] resolved Rust dependency license inventory reviewed
 
 ## Protocol
 - [x] encrypted envelope schema exists

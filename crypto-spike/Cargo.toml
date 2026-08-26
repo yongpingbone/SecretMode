@@ -9,9 +9,9 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-jni = "0.21.1"
+jni = "=0.21.1"
 vodozemac = "=0.10.0"
 
 [dev-dependencies]
-anyhow = "1"
+anyhow = "=1.0.104"
 serde_json = "=1.0.151"
