@@ -141,7 +141,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Run JNI probe inside Android emulator
+      - name: Run JNI and Keystore destruction probes inside Android emulator
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 35
@@ -153,6 +153,7 @@ jobs:
             set -eu
             adb install -r android/app/build/outputs/apk/debug/app-debug.apk
             adb install -r android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-            adb shell am instrument -w com.yongpingbone.secretmode.test/com.yongpingbone.secretmode.crypto.CryptoProbeInstrumentation | tee /tmp/secretmode-jni-probe.txt
-            grep -F "secretmode_result=ok" /tmp/secretmode-jni-probe.txt
-            grep -F "probe=vodozemac-0.10.0" /tmp/secretmode-jni-probe.txt
+            adb shell am instrument -w com.yongpingbone.secretmode.test/com.yongpingbone.secretmode.crypto.CryptoProbeInstrumentation | tee /tmp/secretmode-android-probes.txt
+            grep -F "secretmode_result=ok" /tmp/secretmode-android-probes.txt
+            grep -F "probe=vodozemac-0.10.0" /tmp/secretmode-android-probes.txt
+            grep -F "keystore_destroy_result=ok" /tmp/secretmode-android-probes.txt

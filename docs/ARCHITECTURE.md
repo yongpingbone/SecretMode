@@ -1,4 +1,4 @@
-# SecretMode Architecture v0.2
+# SecretMode Architecture v0.3
 
 ## Product boundary
 
@@ -18,7 +18,7 @@ SecretMode BubbleActivity
     +-- secure UI policy
     +-- SessionEngine (future)
     +-- SecureSession interface (future)
-    +-- encrypted storage (future)
+    +-- encrypted storage / Android Keystore boundary
     |
     v
 Transport / backend (future)
@@ -77,8 +77,15 @@ CREATING -> ACTIVE -> REVOKING -> REVOKED -> PURGED
 
 Online peers should observe revocation quickly. Offline peers cannot be physically modified remotely, so SecretMode uses authoritative server state plus expiring display/session leases. A revoked server state can never issue a new lease.
 
-## Storage target
+## Storage / cryptographic-erasure boundary
 
-Deletion means cryptographic erasure, not a promise that every NAND cell is physically overwritten immediately.
+M0 introduces an Android Keystore storage primitive before any real Olm pickle is persisted by the product. A session-state blob is encrypted with AES-256-GCM using a non-exportable Android Keystore key. The session identifier is bound as authenticated additional data, and the Keystore alias uses a SHA-256 fingerprint rather than the raw session identifier.
 
-The storage design must account for database files, WAL, journal, caches, and wrapped session material as one security boundary.
+The M0 emulator probe must prove all of the following on the Android Keystore provider:
+
+1. state encrypted under the live session key decrypts correctly
+2. deleting the Keystore entry removes app decryptability for the old ciphertext
+3. recreating a new key under the same derived alias still cannot authenticate/decrypt ciphertext created by the destroyed key
+4. cleanup removes the replacement probe key
+
+This establishes cryptographic erasure of app decryptability, not physical overwriting of every NAND cell. Production storage still has to treat encrypted database rows, WAL/journal files, caches, replay-window state, and wrapped Olm session material as one lifecycle boundary.
