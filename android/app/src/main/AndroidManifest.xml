@@ -5,6 +5,7 @@
 
     <application
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
         android:icon="@drawable/ic_secretmode"
         android:label="SecretMode"
