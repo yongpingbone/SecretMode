@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://secretmode.invalid/schemas/envelope-v1.json",
+  "title": "SecretMode encrypted envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sessionId",
+    "messageId",
+    "senderDeviceId",
+    "protocol",
+    "protocolVersion",
+    "cryptoHeader",
+    "ciphertext",
+    "sequence",
+    "createdAt"
+  ],
+  "properties": {
+    "version": { "const": 1 },
+    "sessionId": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "messageId": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "senderDeviceId": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "protocol": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "protocolVersion": { "type": "integer", "minimum": 1 },
+    "cryptoHeader": {
+      "description": "Opaque, base64-encoded protocol header. Backend must not parse ratchet internals.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "ciphertext": { "type": "string", "minLength": 1 },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "createdAt": { "type": "string", "format": "date-time" }
+  }
+}
