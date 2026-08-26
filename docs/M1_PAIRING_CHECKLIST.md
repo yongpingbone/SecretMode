@@ -11,7 +11,7 @@
 - [x] inviter and invitee signatures bind the same transcript
 - [x] peer/key substitution fails verification
 - [x] role-reflection signature reuse fails verification
-- [ ] invite expiry and one-time consumption model tested
+- [x] invite expiry and one-time consumption model tested
 
 ## Human verification
 - [ ] final QR verification UX accepted

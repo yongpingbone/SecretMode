@@ -156,6 +156,7 @@ fn schemas_are_valid_json() {
         include_str!("../../protocol/pairing-accept.schema.json"),
         include_str!("../../protocol/pairing-confirm.schema.json"),
         include_str!("../../protocol/pairing-verification-ack.schema.json"),
+        include_str!("../../protocol/participant-revoke-request.schema.json"),
     ] {
         let parsed: serde_json::Value = serde_json::from_str(schema).unwrap();
         assert_eq!(parsed["$schema"], "https://json-schema.org/draft/2020-12/schema");

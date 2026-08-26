@@ -6,6 +6,7 @@ import android.os.Bundle
 import com.yongpingbone.secretmode.storage.SessionStateCipher
 import java.security.GeneralSecurityException
 import java.security.KeyStore
+import java.security.MessageDigest
 
 class CryptoProbeInstrumentation : Instrumentation() {
     override fun onCreate(arguments: Bundle?) {
@@ -22,6 +23,7 @@ class CryptoProbeInstrumentation : Instrumentation() {
             verifyKeystoreCryptographicErasure()
             val restoredSessionId = verifyRealOlmSessionCryptographicErasure()
             verifyDeviceIdentitySigningAndPairingTranscript()
+            verifyParticipantRevokeRequestAuthorization()
 
             result.putString("secretmode_result", "ok")
             result.putString("probe", probe)
@@ -30,6 +32,7 @@ class CryptoProbeInstrumentation : Instrumentation() {
             result.putString("restored_olm_session_id", restoredSessionId)
             result.putString("device_identity_result", "ok")
             result.putString("pairing_transcript_result", "ok")
+            result.putString("participant_revoke_request_result", "ok")
             finish(Activity.RESULT_OK, result)
         } catch (t: Throwable) {
             result.putString("secretmode_result", "failure")
@@ -145,6 +148,135 @@ class CryptoProbeInstrumentation : Instrumentation() {
         } finally {
             deleteProbeKey(inviterAlias)
             deleteProbeKey(inviteeAlias)
+        }
+    }
+
+    private fun verifyParticipantRevokeRequestAuthorization() {
+        val requesterAlias = "secretmode.m1-revoke-request-probe.requester"
+        val peerAlias = "secretmode.m1-revoke-request-probe.peer"
+        deleteProbeKey(requesterAlias)
+        deleteProbeKey(peerAlias)
+
+        try {
+            val requesterSigner = DeviceIdentitySigner(requesterAlias)
+            val peerSigner = DeviceIdentitySigner(peerAlias)
+            val requesterSpki = requesterSigner.publicKeySpki()
+            val peerSpki = peerSigner.publicKeySpki()
+            val digest = MessageDigest.getInstance("SHA-256")
+            val relationshipDigest = digest.digest("secretmode-m1-verified-relationship".toByteArray())
+            val requesterFingerprint = digest.digest(requesterSpki)
+            val requestId = ByteArray(ParticipantRevokeRequest.REQUEST_ID_SIZE_BYTES) { index -> (index + 91).toByte() }
+
+            val request = ParticipantRevokeRequest(
+                requestId = requestId,
+                sessionId = "session-revoke-probe-0001",
+                relationshipTranscriptDigest = relationshipDigest,
+                requesterDeviceId = "m1-inviter-device",
+                requesterIdentityKeyFingerprint = requesterFingerprint,
+                requestedAtMs = 1_700_000_000_000L,
+                expiresAtMs = 1_700_000_060_000L,
+                reason = ParticipantRevokeReason.USER_REQUESTED,
+            )
+            val payload = request.signingPayload()
+            val signature = requesterSigner.sign(payload)
+
+            check(DeviceIdentitySigner.verify(requesterSpki, payload, signature)) {
+                "Participant revoke request signature did not verify"
+            }
+            check(!DeviceIdentitySigner.verify(peerSpki, payload, signature)) {
+                "Participant revoke request verified under the other participant key"
+            }
+
+            val tamperedSession = ParticipantRevokeRequest(
+                requestId = request.requestId,
+                sessionId = "session-revoke-probe-0002",
+                relationshipTranscriptDigest = request.relationshipTranscriptDigest,
+                requesterDeviceId = request.requesterDeviceId,
+                requesterIdentityKeyFingerprint = request.requesterIdentityKeyFingerprint,
+                requestedAtMs = request.requestedAtMs,
+                expiresAtMs = request.expiresAtMs,
+                reason = request.reason,
+            )
+            check(!DeviceIdentitySigner.verify(requesterSpki, tamperedSession.signingPayload(), signature)) {
+                "Revoke signature verified after session substitution"
+            }
+
+            val tamperedRelationshipDigest = request.relationshipTranscriptDigest.also { bytes ->
+                bytes[0] = (bytes[0].toInt() xor 1).toByte()
+            }
+            val tamperedRelationship = ParticipantRevokeRequest(
+                requestId = request.requestId,
+                sessionId = request.sessionId,
+                relationshipTranscriptDigest = tamperedRelationshipDigest,
+                requesterDeviceId = request.requesterDeviceId,
+                requesterIdentityKeyFingerprint = request.requesterIdentityKeyFingerprint,
+                requestedAtMs = request.requestedAtMs,
+                expiresAtMs = request.expiresAtMs,
+                reason = request.reason,
+            )
+            check(!DeviceIdentitySigner.verify(requesterSpki, tamperedRelationship.signingPayload(), signature)) {
+                "Revoke signature verified after relationship substitution"
+            }
+
+            val tamperedFingerprint = request.requesterIdentityKeyFingerprint.also { bytes ->
+                bytes[0] = (bytes[0].toInt() xor 1).toByte()
+            }
+            val tamperedIdentity = ParticipantRevokeRequest(
+                requestId = request.requestId,
+                sessionId = request.sessionId,
+                relationshipTranscriptDigest = request.relationshipTranscriptDigest,
+                requesterDeviceId = request.requesterDeviceId,
+                requesterIdentityKeyFingerprint = tamperedFingerprint,
+                requestedAtMs = request.requestedAtMs,
+                expiresAtMs = request.expiresAtMs,
+                reason = request.reason,
+            )
+            check(!DeviceIdentitySigner.verify(requesterSpki, tamperedIdentity.signingPayload(), signature)) {
+                "Revoke signature verified after requester identity fingerprint substitution"
+            }
+
+            val tamperedReason = ParticipantRevokeRequest(
+                requestId = request.requestId,
+                sessionId = request.sessionId,
+                relationshipTranscriptDigest = request.relationshipTranscriptDigest,
+                requesterDeviceId = request.requesterDeviceId,
+                requesterIdentityKeyFingerprint = request.requesterIdentityKeyFingerprint,
+                requestedAtMs = request.requestedAtMs,
+                expiresAtMs = request.expiresAtMs,
+                reason = ParticipantRevokeReason.SECURITY_RESET,
+            )
+            check(!DeviceIdentitySigner.verify(requesterSpki, tamperedReason.signingPayload(), signature)) {
+                "Revoke signature verified after reason substitution"
+            }
+
+            val requestIdSnapshot = request.requestId
+            requestIdSnapshot[0] = (requestIdSnapshot[0].toInt() xor 1).toByte()
+            check(!requestIdSnapshot.contentEquals(request.requestId)) {
+                "ParticipantRevokeRequest exposed mutable requestId storage"
+            }
+            val relationshipSnapshot = request.relationshipTranscriptDigest
+            relationshipSnapshot[0] = (relationshipSnapshot[0].toInt() xor 1).toByte()
+            check(!relationshipSnapshot.contentEquals(request.relationshipTranscriptDigest)) {
+                "ParticipantRevokeRequest exposed mutable relationship digest storage"
+            }
+            val fingerprintSnapshot = request.requesterIdentityKeyFingerprint
+            fingerprintSnapshot[0] = (fingerprintSnapshot[0].toInt() xor 1).toByte()
+            check(!fingerprintSnapshot.contentEquals(request.requesterIdentityKeyFingerprint)) {
+                "ParticipantRevokeRequest exposed mutable identity fingerprint storage"
+            }
+
+            payload.fill(0)
+            relationshipDigest.fill(0)
+            requesterFingerprint.fill(0)
+            requestId.fill(0)
+            tamperedRelationshipDigest.fill(0)
+            tamperedFingerprint.fill(0)
+            requestIdSnapshot.fill(0)
+            relationshipSnapshot.fill(0)
+            fingerprintSnapshot.fill(0)
+        } finally {
+            deleteProbeKey(requesterAlias)
+            deleteProbeKey(peerAlias)
         }
     }
 

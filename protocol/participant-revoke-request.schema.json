@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:secretmode:protocol:participant-revoke-request:v1",
+  "title": "SecretMode Participant Revoke Request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type",
+    "version",
+    "requestIdB64u",
+    "sessionId",
+    "relationshipTranscriptDigestB64u",
+    "requesterDeviceId",
+    "requesterIdentityKeyFingerprintB64u",
+    "requestedAtMs",
+    "expiresAtMs",
+    "reason",
+    "signatureB64u"
+  ],
+  "properties": {
+    "type": { "const": "participant_revoke_request" },
+    "version": { "const": 1 },
+    "requestIdB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{22}$" },
+    "sessionId": { "type": "string", "minLength": 16, "maxLength": 256 },
+    "relationshipTranscriptDigestB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
+    "requesterDeviceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "requesterIdentityKeyFingerprintB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
+    "requestedAtMs": { "type": "integer", "minimum": 0 },
+    "expiresAtMs": { "type": "integer", "minimum": 1 },
+    "reason": {
+      "enum": ["USER_REQUESTED", "DEVICE_REMOVED", "SECURITY_RESET"]
+    },
+    "signatureB64u": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 2048,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    }
+  }
+}

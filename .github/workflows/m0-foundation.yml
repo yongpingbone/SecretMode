@@ -178,3 +178,4 @@ jobs:
             grep -E "restored_olm_session_id=.+" /tmp/secretmode-android-probes.txt
             grep -F "device_identity_result=ok" /tmp/secretmode-android-probes.txt
             grep -F "pairing_transcript_result=ok" /tmp/secretmode-android-probes.txt
+            grep -F "participant_revoke_request_result=ok" /tmp/secretmode-android-probes.txt
