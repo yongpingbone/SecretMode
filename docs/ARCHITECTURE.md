@@ -1,4 +1,4 @@
-# SecretMode Architecture v0.3
+# SecretMode Architecture v0.4
 
 ## Product boundary
 
@@ -79,13 +79,19 @@ Online peers should observe revocation quickly. Offline peers cannot be physical
 
 ## Storage / cryptographic-erasure boundary
 
-M0 introduces an Android Keystore storage primitive before any real Olm pickle is persisted by the product. A session-state blob is encrypted with AES-256-GCM using a non-exportable Android Keystore key. The session identifier is bound as authenticated additional data, and the Keystore alias uses a SHA-256 fingerprint rather than the raw session identifier.
+M0 uses an Android Keystore storage primitive before any real Olm pickle is persisted by the product. A session-state blob is encrypted with AES-256-GCM using a non-exportable Android Keystore key. The session identifier is bound as authenticated additional data, and the Keystore alias uses a SHA-256 fingerprint rather than the raw session identifier.
 
-The M0 emulator probe must prove all of the following on the Android Keystore provider:
+The Android emulator gate now exercises a real vodozemac Olm `SessionPickle` pair end to end:
 
-1. state encrypted under the live session key decrypts correctly
-2. deleting the Keystore entry removes app decryptability for the old ciphertext
-3. recreating a new key under the same derived alias still cannot authenticate/decrypt ciphertext created by the destroyed key
-4. cleanup removes the replacement probe key
+1. Rust establishes a real Alice/Bob Olm session and serializes both `SessionPickle` values to JSON bytes
+2. Android encrypts that bundle using the per-session Keystore key
+3. Android decrypts it while the key is live and returns the plaintext bytes to Rust
+4. Rust reconstructs both Sessions, verifies the session IDs match, then performs another Olm encrypt/decrypt roundtrip
+5. Java plaintext copies are cleared before key destruction
+6. deleting the Keystore entry makes the retained old ciphertext unavailable to the app
+7. recreating a new key under the same derived alias still cannot authenticate/decrypt the old Olm-pickle ciphertext
+8. cleanup removes the replacement probe key
 
-This establishes cryptographic erasure of app decryptability, not physical overwriting of every NAND cell. Production storage still has to treat encrypted database rows, WAL/journal files, caches, replay-window state, and wrapped Olm session material as one lifecycle boundary.
+The CI gate requires `olm_pickle_destroy_result=ok` and a non-empty `restored_olm_session_id` from Android instrumentation before the erasure job can pass.
+
+This proves cryptographic erasure of app decryptability for the tested storage design. It does not claim physical overwriting of every NAND cell, removal of arbitrary external copies, or a forensic guarantee about plaintext that previously existed in process memory. Production storage still has to treat encrypted database rows, WAL/journal files, caches, replay-window state, and wrapped Olm session material as one lifecycle boundary.

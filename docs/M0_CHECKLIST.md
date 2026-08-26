@@ -31,7 +31,7 @@
 - [x] replay test with authenticated inner sequence and 128-slot window
 - [x] pickle/restore across simulated process death via serialized bytes
 - [x] Android Keystore cryptographic-erasure emulator probe
-- [ ] destroyed state cannot decrypt old session
+- [x] destroyed state cannot decrypt old real Olm SessionPickle
 - [ ] authenticated pairing design accepted
 - [ ] final third-party notices / legal review
 

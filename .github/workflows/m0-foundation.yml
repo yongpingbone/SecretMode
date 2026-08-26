@@ -158,3 +158,4 @@ jobs:
             grep -F "probe=vodozemac-0.10.0" /tmp/secretmode-android-probes.txt
             grep -F "keystore_destroy_result=ok" /tmp/secretmode-android-probes.txt
             grep -F "olm_pickle_destroy_result=ok" /tmp/secretmode-android-probes.txt
+            grep -E "restored_olm_session_id=.+" /tmp/secretmode-android-probes.txt
