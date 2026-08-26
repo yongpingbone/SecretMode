@@ -20,7 +20,7 @@
 - [x] device key change forces re-verification
 
 ## Service boundary
-- [ ] participant-authorized revoke request signature flow defined
+- [x] participant-authorized revoke request signature flow defined
 - [ ] authoritative state/lease signer trust and rotation design accepted
 - [ ] relay is not an implicit signing authority
 
