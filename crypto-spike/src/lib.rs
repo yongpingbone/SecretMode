@@ -16,7 +16,7 @@ pub extern "system" fn Java_com_yongpingbone_secretmode_crypto_CryptoBridge_nati
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
-    use vodozemac::olm::{Account, OlmMessage, Session, SessionConfig};
+    use vodozemac::olm::{Account, OlmMessage, Session, SessionConfig, SessionPickle};
 
     fn establish_sessions() -> Result<(Session, Session)> {
         let alice = Account::new();
@@ -115,23 +115,28 @@ mod tests {
     }
 
     #[test]
-    fn session_pickle_restore_continues_ratchet() -> Result<()> {
+    fn serialized_pickle_survives_simulated_process_death() -> Result<()> {
         let (mut alice_session, mut bob_session) = establish_sessions()?;
 
         for index in 0..32 {
-            let plaintext = format!("before-pickle-{index}").into_bytes();
+            let plaintext = format!("before-process-death-{index}").into_bytes();
             let encrypted = alice_session.encrypt(&plaintext)?;
             assert_eq!(bob_session.decrypt(&encrypted)?, plaintext);
         }
 
         let alice_session_id = alice_session.session_id();
         let bob_session_id = bob_session.session_id();
-        let alice_pickle = alice_session.pickle();
-        let bob_pickle = bob_session.pickle();
+
+        // Cross a real serialization boundary before dropping the live session objects.
+        // The byte vectors are the only state allowed to survive this simulated process death.
+        let alice_bytes = serde_json::to_vec(&alice_session.pickle())?;
+        let bob_bytes = serde_json::to_vec(&bob_session.pickle())?;
 
         drop(alice_session);
         drop(bob_session);
 
+        let alice_pickle: SessionPickle = serde_json::from_slice(&alice_bytes)?;
+        let bob_pickle: SessionPickle = serde_json::from_slice(&bob_bytes)?;
         let mut restored_alice = Session::from_pickle(alice_pickle);
         let mut restored_bob = Session::from_pickle(bob_pickle);
 
@@ -140,11 +145,11 @@ mod tests {
         assert_eq!(restored_alice.session_id(), restored_bob.session_id());
 
         for index in 0..32 {
-            let bob_plaintext = format!("after-pickle-bob-{index}").into_bytes();
+            let bob_plaintext = format!("after-process-death-bob-{index}").into_bytes();
             let encrypted_for_alice = restored_bob.encrypt(&bob_plaintext)?;
             assert_eq!(restored_alice.decrypt(&encrypted_for_alice)?, bob_plaintext);
 
-            let alice_plaintext = format!("after-pickle-alice-{index}").into_bytes();
+            let alice_plaintext = format!("after-process-death-alice-{index}").into_bytes();
             let encrypted_for_bob = restored_alice.encrypt(&alice_plaintext)?;
             assert_eq!(restored_bob.decrypt(&encrypted_for_bob)?, alice_plaintext);
         }
